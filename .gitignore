@@ -1,0 +1,26 @@
+# PyCharm / JetBrains IDE
+.idea/
+*.iml
+
+# Virtual Environment
+.venv/
+venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
