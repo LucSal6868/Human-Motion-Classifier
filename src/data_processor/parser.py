@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import csv
 
 #######################################################################
@@ -17,21 +18,26 @@ def parse(data_folder : str, target_folder : str):
     # PARSE EACH SUBFOLDER
     for sf_name in subfolders:
         sf_path = os.path.join(data_folder, sf_name)
+
+        # GET DATA
+        sf_data_list = []
+
         try:
             with os.scandir(sf_path) as entries:
                 for entry in entries:
                     if entry.is_file():
-                        file_name = entry.name
-                        file_path = os.path.join(sf_path, file_name)
-
-                        print(get_data_from_file(file_path))
-                        print("\n")
+                        file_path = os.path.join(sf_path, entry.name)
+                        file_data: np.ndarray = get_data_from_file(file_path)
+                        sf_data_list.append(file_data)
 
         except Exception as e:
-            print(f"\tFAILED TO PARSE {sf_name}: {e}")
+            print(f"\tERROR GETTING DATA FROM {sf_name}: {e}")
             continue
 
-
+        # EXPORT DATA
+        sf_data = np.array(sf_data_list, dtype=object)
+        target_path = os.path.join(target_folder, f"{sf_name}.npz")
+        np.savez_compressed(target_path, sf_data=sf_data)
 
 #######################################################################
 
@@ -50,7 +56,7 @@ def get_subfolders(folder : str) -> list[str]:
     return subfolders
 
 
-def get_data_from_file(file_path: str) -> list[list[int]]:
+def get_data_from_file(file_path: str) -> np.ndarray:
     lines : list[str] = []
 
     try:
@@ -63,10 +69,15 @@ def get_data_from_file(file_path: str) -> list[list[int]]:
 
     for line in lines:
         row : list[str] = line.split(",")
-        if len(row) >= 7:
+
+        if row[0] == "r":
             vector3_str: list[str] = row[6].split("/")
             vector3_i = [int(s) for s in vector3_str]
             vector3_array.append(vector3_i)
+        elif row[0] == "s":
+            pass # IDK what the "s" means
 
-    return vector3_array
+    numpy_array = np.array(vector3_array)
+
+    return numpy_array
 
