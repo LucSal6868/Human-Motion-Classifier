@@ -20,14 +20,14 @@ def parse(data_folder : str, target_folder : str):
         sf_path = os.path.join(data_folder, sf_name)
 
         # GET DATA
-        sf_data_list = []
+        sf_data_list :  list[list[list[int]]] = []
 
         try:
             with os.scandir(sf_path) as entries:
                 for entry in entries:
                     if entry.is_file():
                         file_path = os.path.join(sf_path, entry.name)
-                        file_data: np.ndarray = get_data_from_file(file_path)
+                        file_data:  list[list[int]] = get_data_from_file(file_path)
                         sf_data_list.append(file_data)
 
         except Exception as e:
@@ -56,7 +56,7 @@ def get_subfolders(folder : str) -> list[str]:
     return subfolders
 
 
-def get_data_from_file(file_path: str) -> np.ndarray:
+def get_data_from_file(file_path: str) -> list[list[int]]:
     lines : list[str] = []
 
     try:
@@ -65,7 +65,7 @@ def get_data_from_file(file_path: str) -> np.ndarray:
     except Exception as e:
         print(f"\tERROR READING {file_path}: {e}")
 
-    vector3_array : list[list[int]] = []
+    result : list[list[int]] = []
 
     for line in lines:
         row : list[str] = line.split(",")
@@ -73,11 +73,9 @@ def get_data_from_file(file_path: str) -> np.ndarray:
         if row[0] == "r":
             vector3_str: list[str] = row[6].split("/")
             vector3_i = [int(s) for s in vector3_str]
-            vector3_array.append(vector3_i)
+            result.append(vector3_i)
         elif row[0] == "s":
             pass # IDK what the "s" means
 
-    numpy_array = np.array(vector3_array)
-
-    return numpy_array
+    return result
 
