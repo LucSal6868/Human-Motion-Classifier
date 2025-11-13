@@ -1,0 +1,21 @@
+from enum import Enum
+import os
+
+
+class PATHS(Enum):
+
+    # This class manages any folder or file paths
+    # EXAMPLE : PATHS.PARSED_DATA.get_path()
+
+    # FOLDERS
+    DATA_FOLDER = "data"
+    RAW_DATA_FOLDER = "data/raw"
+
+    # FILES
+    PARSED_DATA = "data/parsed.npz"
+    AUGMENTED_DATA = "data/augmented.npz"
+
+    # RELATIVE PATH FINDER
+    def get_path(self) -> str:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(base_dir, self.value)

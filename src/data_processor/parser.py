@@ -1,22 +1,18 @@
 import os
 import numpy as np
-import csv
+from src.paths import PATHS
 
 #######################################################################
 
-def parse(data_folder: str, target_folder: str):
+def parse():
     # GET SUBFOLDERS
-    subfolders: list[str] = get_subfolders(data_folder)
-
-    # CREATE PARSED FOLDER
-    os.makedirs(target_folder, exist_ok=True)
+    subfolders: list[str] = get_subfolders(PATHS.RAW_DATA_FOLDER.get_path())
 
     parsed_data = {}
 
     # PARSE EACH SUBFOLDER
     for sf_name in subfolders:
-        sf_path = os.path.join(data_folder, sf_name)
-
+        sf_path = os.path.join(PATHS.RAW_DATA_FOLDER.get_path(), sf_name)
         sf_data_list: list[np.ndarray] = []
 
         try:
@@ -34,12 +30,13 @@ def parse(data_folder: str, target_folder: str):
         sf_data = np.array(sf_data_list, dtype=object)
         parsed_data[sf_name] = sf_data
 
-    target_path = os.path.join(target_folder, "parsed.npz")
-    np.savez_compressed(target_path, **parsed_data)
+    # SAVE PARSED DATA TO FILE
+    np.savez_compressed(PATHS.PARSED_DATA.get_path(), **parsed_data)
 
 
 #######################################################################
 
+# GETS SUBFOLDERS IN A FOLDER
 def get_subfolders(folder: str) -> list[str]:
     subfolders = []
     try:
@@ -47,15 +44,21 @@ def get_subfolders(folder: str) -> list[str]:
             for entry in entries:
                 if entry.is_dir():
                     subfolders.append(entry.name)
+
+        if len(subfolders) <= 0:
+            raise Exception("RAW DATA HAS NO SUBFOLDERS")
+
     except Exception as e:
         print("CANT GET SUBFOLDERS IN " + folder)
         return []
     return subfolders
 
 
+# GETS 3D POINT DATA FROM A RAW FILE
 def get_data_from_file(file_path: str) -> np.ndarray:
     lines: list[str] = []
 
+    # OPEN FILE
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
@@ -64,16 +67,14 @@ def get_data_from_file(file_path: str) -> np.ndarray:
 
     result: list[list[int]] = []
 
+    # PARSE LINE BY LINE
     for line in lines:
         row: list[str] = line.strip().split(",")
 
         if row[0] == "r":
-            vector3_str: list[str] = row[6].split("/")
-            try:
-                vector3_i = [int(s) for s in vector3_str]
-                result.append(vector3_i)
-            except ValueError:
-                print(f"\tERROR PARSING VECTOR: {row[6]} in {file_path}")
+            vector3_str: list[str] = row[6].split("/") # GET THE 6TH INDEX
+            vector3_i = [int(s) for s in vector3_str]
+            result.append(vector3_i)
         elif row[0] == "s":
             pass  # ignore
 

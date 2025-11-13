@@ -1,10 +1,10 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 import os
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from tkinter import Tk, filedialog
+from src.paths import PATHS
 
-DATA_FOLDER = '../../data/'
 
 def visualize_npz(npz_path: str):
     # LOAD FILE
@@ -72,10 +72,9 @@ if __name__ == "__main__":
     root = Tk()
     root.withdraw()
 
-    script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), DATA_FOLDER)
     path = filedialog.askopenfilename(
         title="Select parsed .npz File",
-        initialdir=script_dir,
+        initialdir=PATHS.DATA_FOLDER.get_path(),
         filetypes=[("NumPy Compressed Files", "*.npz"), ("All Files", "*.*")]
     )
 

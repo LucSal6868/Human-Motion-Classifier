@@ -1,11 +1,7 @@
-import os
-
 from parser import parse
+from augmentor import augment
 
-DATA_FOLDER = '../../data'
-RAW_FOLDER = 'raw'
-PARSED_FOLDER = 'parsed'
+print("PROCESSING RAW DATA")
 
-parse(os.path.join(DATA_FOLDER, RAW_FOLDER),  os.path.join(DATA_FOLDER, PARSED_FOLDER))
-
-
+parse()
+augment()
