@@ -63,7 +63,8 @@ class NPZVisualizer:
             self.ax.set_xlabel("X")
             self.ax.set_ylabel("Y")
             self.ax.set_zlabel("Z")
-            self.ax.set_title(f"{key} — Array {self.array_idx} / {len(arr_list)-1}")
+            num_points = array.shape[0]
+            self.ax.set_title(f"{key} — Array {self.array_idx} / {len(arr_list) - 1} — {num_points} points")
         else:
             self.ax.set_title(f"{key} — Array {self.array_idx} not Nx3")
 
