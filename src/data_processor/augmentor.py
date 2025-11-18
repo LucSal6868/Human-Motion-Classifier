@@ -19,7 +19,7 @@ def augment():
 
             # IM INSERTING THEM NEXT TO EACH OTHER TO COMPARE
             augmented_dataset.append(array)
-            augmented_dataset.append(skew(array, max_skew=0.25))
+            augmented_dataset.append(skew(array, max_skew=0.10))
 
         augmented_data[key] = np.array(augmented_dataset, dtype=object)
 
@@ -57,3 +57,5 @@ def scale(array : np.ndarray) -> np.ndarray:
 
 def bend(array : np.ndarray) -> np.ndarray:
     pass
+
+
