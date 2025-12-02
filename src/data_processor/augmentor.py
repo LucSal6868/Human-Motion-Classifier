@@ -3,8 +3,8 @@ from src.paths import PATHS
 
 #######################################################################
 
-def augment():
-    data = np.load(PATHS.PARSED_DATA.get_path(), allow_pickle=True)
+def augment(input_file : str, output_file : str):
+    data = np.load(input_file, allow_pickle=True)
 
     # Convert NpzFile to normal dict so we can modify it
     augmented_data = {key: value for key, value in data.items()}
@@ -24,7 +24,7 @@ def augment():
 
         augmented_data[key] = np.array(augmented_dataset, dtype=object)
 
-    np.savez_compressed(PATHS.AUGMENTED_DATA.get_path(), **augmented_data)
+    np.savez_compressed(output_file, **augmented_data)
 
 
 #######################################################################

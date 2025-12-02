@@ -9,11 +9,13 @@ class PATHS(Enum):
 
     # FOLDERS
     DATA_FOLDER = "data"
-    RAW_DATA_FOLDER = "data/raw"
+    RAW_TRAIN_DATA_FOLDER = "data/train/raw"
+    RAW_TEST_DATA_FOLDER = "data/test/raw"
 
     # FILES
-    PARSED_DATA = "data/parsed.npz"
-    AUGMENTED_DATA = "data/augmented.npz"
+    PARSED_TRAIN_DATA = "data/train/parsed.npz"
+    PARSED_TEST_DATA = "data/test/parsed.npz"
+    AUGMENTED_DATA = "data/train/augmented.npz"
 
     # RELATIVE PATH FINDER
     def get_path(self) -> str:

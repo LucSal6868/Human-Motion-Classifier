@@ -4,15 +4,15 @@ from src.paths import PATHS
 
 #######################################################################
 
-def parse():
+def parse(input_folder : str, output_file : str):
     # GET SUBFOLDERS
-    subfolders: list[str] = get_subfolders(PATHS.RAW_DATA_FOLDER.get_path())
+    subfolders: list[str] = get_subfolders(input_folder)
 
     parsed_data = {}
 
     # PARSE EACH SUBFOLDER
     for sf_name in subfolders:
-        sf_path = os.path.join(PATHS.RAW_DATA_FOLDER.get_path(), sf_name)
+        sf_path = os.path.join(input_folder, sf_name)
         sf_data_list: list[np.ndarray] = []
 
         try:
@@ -31,7 +31,7 @@ def parse():
         parsed_data[sf_name] = sf_data
 
     # SAVE PARSED DATA TO FILE
-    np.savez_compressed(PATHS.PARSED_DATA.get_path(), **parsed_data)
+    np.savez_compressed(output_file, **parsed_data)
 
 
 #######################################################################
