@@ -20,6 +20,7 @@ def augment():
             # IM INSERTING THEM NEXT TO EACH OTHER TO COMPARE
             augmented_dataset.append(array)
             augmented_dataset.append(skew(array, max_skew=0.10))
+            augmented_dataset.append(add_noise(array, noise_level=0.02))
 
         augmented_data[key] = np.array(augmented_dataset, dtype=object)
 
@@ -34,8 +35,13 @@ def up_sample(array : np.ndarray) -> np.ndarray:
 def down_sample(array : np.ndarray) -> np.ndarray:
     pass
 
-def add_noise(array : np.ndarray) -> np.ndarray:
-    pass
+def add_noise(array: np.ndarray, noise_level: float = 0.02) -> np.ndarray:
+    if array.size == 0:
+        return array
+    scale = np.std(array, axis=0) * noise_level
+    noise = np.random.normal(loc=0.0, scale=scale, size=array.shape)
+
+    return array + noise
 
 
 def skew(array: np.ndarray, max_skew: float = 0.2) -> np.ndarray:
