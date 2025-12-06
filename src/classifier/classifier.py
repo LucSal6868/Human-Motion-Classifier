@@ -14,6 +14,8 @@ PARSED_DATA_PATH = "../../data/train/augmented.npz"
 TEST_DATA_PATH = "../../data/test/parsed.npz"
 MODEL_FILE = "svm_model.pkl"
 SCALER_FILE = "scaler.pkl"
+# Added cache file path for the grapher
+TRAINING_DATA_CACHE = "training_data_cache.npz"
 
 # Constant for trajectory resampling
 TRAJECTORY_POINTS = 50
@@ -191,6 +193,13 @@ def train_svm_classifier():
     if X.shape[0] == 0:
         print("No valid data found for training.")
         return
+
+    # CACHE RAW DATA FOR GRAPHER (This is the compatibility fix)
+    try:
+        np.savez_compressed(TRAINING_DATA_CACHE, X=X, y=y)
+        print(f"Raw feature data cached to '{TRAINING_DATA_CACHE}' for visualization.")
+    except Exception as e:
+        print(f"WARNING: Could not save raw feature data cache: {e}")
 
     # CREATE VALIDATION SET
     X_train, X_val, y_train, y_val = train_test_split(
