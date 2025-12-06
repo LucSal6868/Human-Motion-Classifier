@@ -1,21 +1,24 @@
 import numpy as np
 import pickle
 import os
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.svm import SVC  # Import the Support Vector Classifier
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import StandardScaler
 from typing import Dict, List
-# Import for path resampling
 from scipy.interpolate import interp1d
+
+# --- NEW IMPORTS FOR PLOTTING ---
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+# -------------------------------
 
 # Define file paths
 PARSED_DATA_PATH = "../../data/train/augmented.npz"
 TEST_DATA_PATH = "../../data/test/parsed.npz"
 MODEL_FILE = "svm_model.pkl"
 SCALER_FILE = "scaler.pkl"
-# Added cache file path for the grapher
-TRAINING_DATA_CACHE = "training_data_cache.npz"
 
 # Constant for trajectory resampling
 TRAJECTORY_POINTS = 50
@@ -194,27 +197,70 @@ def train_svm_classifier():
         print("No valid data found for training.")
         return
 
-    # CACHE RAW DATA FOR GRAPHER (This is the compatibility fix)
-    try:
-        np.savez_compressed(TRAINING_DATA_CACHE, X=X, y=y)
-        print(f"Raw feature data cached to '{TRAINING_DATA_CACHE}' for visualization.")
-    except Exception as e:
-        print(f"WARNING: Could not save raw feature data cache: {e}")
-
     # CREATE VALIDATION SET
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=0.1, random_state=42, stratify=y
     )
     print(f"\nTotal training samples after split: {len(X_train)}")
 
-    # SCALE FEATURES (NORAMLZIE)
+    # SCALE FEATURES (NORMALIZE)
     # Mean is Zero
-    # standerd deviation is 1
+    # standard deviation is 1
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
 
+    # ----------------------------------------------------
+    # --- START: New PCA and Plotting Code Insertion ---
+    # ----------------------------------------------------
+
+    # 3D Visualization using PCA
+    print("\nPerforming PCA for 3D visualization of the training data...")
+    pca = PCA(n_components=3)
+    X_3d = pca.fit_transform(X_train_scaled)
+
+    # Convert labels to numerical for coloring the scatter plot
+    unique_labels = np.unique(y_train)
+    label_map = {label: i for i, label in enumerate(unique_labels)}
+    y_numeric = np.array([label_map[label] for label in y_train])
+
+    # Create the 3D plot
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Scatter plot
+    scatter = ax.scatter(
+        X_3d[:, 0], X_3d[:, 1], X_3d[:, 2],
+        c=y_numeric,
+        cmap='viridis', # 'viridis' is a perceptually uniform colormap
+        marker='o'
+    )
+
+    # Add labels and title
+    ax.set_xlabel(f'PCA Component 1 ({pca.explained_variance_ratio_[0]*100:.2f}%)')
+    ax.set_ylabel(f'PCA Component 2 ({pca.explained_variance_ratio_[1]*100:.2f}%)')
+    ax.set_zlabel(f'PCA Component 3 ({pca.explained_variance_ratio_[2]*100:.2f}%)')
+    ax.set_title('3D Visualization of Scaled Features (PCA Reduced)')
+
+    # Create a legend with class names
+    legend1 = ax.legend(
+        *scatter.legend_elements(),
+        title="Classes",
+        loc="upper right",
+        labels=unique_labels
+    )
+    ax.add_artist(legend1)
+
+    plt.tight_layout()
+    plt.savefig('pca_3d_visualization.png')
+    print(f"3D PCA visualization saved as 'pca_3d_visualization.png' in the current directory.")
+
+    # ----------------------------------------------------
+    # --- END: New PCA and Plotting Code Insertion ---
+    # ----------------------------------------------------
+
+
     # TRAIN FINAL SVM MODEL
-    print("Initializing SVM Classifier with fixed parameters (C=1.0, gamma='scale', kernel='rbf')...")
+    print("\nInitializing SVM Classifier with fixed parameters (C=1.0, gamma='scale', kernel='rbf')...")
     svm_model = SVC(C=1.0, gamma='scale', kernel='rbf', random_state=42)
     svm_model.fit(X_train_scaled, y_train)
 

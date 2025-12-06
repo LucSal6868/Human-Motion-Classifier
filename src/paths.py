@@ -15,7 +15,8 @@ class PATHS(Enum):
     # FILES
     PARSED_TRAIN_DATA = "data/train/parsed.npz"
     PARSED_TEST_DATA = "data/test/parsed.npz"
-    AUGMENTED_DATA = "data/train/augmented.npz"
+    AUGMENTED_TRAIN_DATA = "data/train/augmented.npz"
+    AUGMENTED_TEST_DATA = "data/test/augmented.npz"
 
     # RELATIVE PATH FINDER
     def get_path(self) -> str:
