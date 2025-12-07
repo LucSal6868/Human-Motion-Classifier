@@ -8,11 +8,10 @@ from sklearn.preprocessing import StandardScaler
 from typing import Dict, List
 from scipy.interpolate import interp1d
 
-# --- NEW IMPORTS FOR PLOTTING ---
+# PLOTTING IMPORTS
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-# -------------------------------
 
 # Define file paths
 PARSED_DATA_PATH = "../../data/train/augmented.npz"
@@ -20,7 +19,7 @@ TEST_DATA_PATH = "../../data/test/parsed.npz"
 MODEL_FILE = "svm_model.pkl"
 SCALER_FILE = "scaler.pkl"
 
-# Constant for trajectory resampling
+# TRAJECTORY SAMPLING
 TRAJECTORY_POINTS = 50
 
 # EXTRACTS 125 FEATURES FROM 3D ARRAY
@@ -209,9 +208,7 @@ def train_svm_classifier():
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
 
-    # ----------------------------------------------------
-    # --- START: New PCA and Plotting Code Insertion ---
-    # ----------------------------------------------------
+    ############## PCA FOR GRAPHER START
 
     # 3D Visualization using PCA
     print("\nPerforming PCA for 3D visualization of the training data...")
@@ -254,9 +251,7 @@ def train_svm_classifier():
     plt.savefig('pca_3d_visualization.png')
     print(f"3D PCA visualization saved as 'pca_3d_visualization.png' in the current directory.")
 
-    # ----------------------------------------------------
-    # --- END: New PCA and Plotting Code Insertion ---
-    # ----------------------------------------------------
+   ############## PCA FOR GRAPHER END
 
 
     # TRAIN FINAL SVM MODEL
