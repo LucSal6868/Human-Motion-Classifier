@@ -10,7 +10,7 @@ def parse(input_folder: str, output_file: str, mode: str = 'subfolder'):
     parsed_data = {}
 
     if mode == 'subfolder':
-        print(f"--- PARSING MODE: SUBFOLDER ({input_folder}) ---")
+        print(f"PARSING SUBFOLDER")
         subfolders: list[str] = get_subfolders(input_folder)
 
         if not subfolders:
@@ -39,7 +39,7 @@ def parse(input_folder: str, output_file: str, mode: str = 'subfolder'):
                 print(f"\tWarning: No valid data found in subfolder: {sf_name}")
 
     elif mode == 'file':
-        print(f"--- PARSING MODE: FILE ({input_folder}) ---")
+        print(f"PARSING FILEs")
 
         try:
             for entry in os.scandir(input_folder):
