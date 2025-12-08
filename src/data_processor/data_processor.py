@@ -1,5 +1,6 @@
 from parser import parse
 from augmentor import augment
+from src.data_processor.parser import parse_test_data
 from src.paths import PATHS
 
 print("PROCESSING RAW DATA")
@@ -10,7 +11,7 @@ print("\taugmenting...")
 augment(PATHS.PARSED_TRAIN_DATA.get_path(), PATHS.AUGMENTED_TRAIN_DATA.get_path())
 
 print("\tparsing test data...")
-parse(PATHS.RAW_TEST_DATA_FOLDER.get_path(), PATHS.PARSED_TEST_DATA.get_path())
+parse_test_data(PATHS.RAW_TEST_DATA_FOLDER.get_path(), PATHS.PARSED_TEST_DATA.get_path())
 # print("\taugmenting test data...")
 # augment(PATHS.PARSED_TEST_DATA.get_path(), PATHS.PARSED_TEST_DATA.get_path())
 

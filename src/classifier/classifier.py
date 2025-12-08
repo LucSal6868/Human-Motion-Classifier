@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import StandardScaler
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from scipy.interpolate import interp1d
 
 # PLOTTING IMPORTS
@@ -15,12 +15,13 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # Define file paths
 PARSED_DATA_PATH = "../../data/train/augmented.npz"
-TEST_DATA_PATH = "../../data/test/parsed.npz"
+TEST_DATA_PATH = "../../data/test/parsed_test_data.npz"
 MODEL_FILE = "svm_model.pkl"
 SCALER_FILE = "scaler.pkl"
 
 # TRAJECTORY SAMPLING
 TRAJECTORY_POINTS = 50
+
 
 # EXTRACTS 125 FEATURES FROM 3D ARRAY
 def extract_features(sequence: np.ndarray) -> np.ndarray:
@@ -86,7 +87,6 @@ def extract_features(sequence: np.ndarray) -> np.ndarray:
     mean_angle_change = np.mean(angle_changes) if angle_changes else 0.0
     std_angle_change = np.std(angle_changes) if angle_changes else 0.0
 
-
     # ADD ALL TO DIRECTIONAL FEATURES
 
     directional_features = np.array([
@@ -146,15 +146,23 @@ def extract_features(sequence: np.ndarray) -> np.ndarray:
 
     return features.astype(np.float32)
 
+
 # convert data to x and y arrays
-def prepare_data(parsed_data_dict: Dict[str, np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
+def prepare_data(parsed_data_dict: Dict[str, np.ndarray]) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    """
+    Prepares data for training or evaluation.
+    Returns X (features), y (labels), and sequence_ids (for tracking).
+    """
     X_features: List[np.ndarray] = []
     y_labels: List[str] = []
+    sequence_ids: List[str] = []
 
-    EXPECTED_FEATURE_SIZE = 125  # Updated to 125
+    EXPECTED_FEATURE_SIZE = 125
 
     for class_name, data_list in parsed_data_dict.items():
-        for sequence in data_list:
+        # NOTE: class_name will be the actual label (e.g., 'circle') for train data,
+        # but a file ID (e.g., '1', '10') for the problematic test data.
+        for i, sequence in enumerate(data_list):
             try:
                 sequence_arr = np.array(sequence, dtype=np.float32)
             except Exception:
@@ -165,13 +173,16 @@ def prepare_data(parsed_data_dict: Dict[str, np.ndarray]) -> tuple[np.ndarray, n
                 if features.size == EXPECTED_FEATURE_SIZE:
                     X_features.append(features)
                     y_labels.append(class_name)
+                    # Use the key (which might be the class or the file ID) and the sequence index
+                    sequence_ids.append(f"{class_name}_seq_{i}")
             else:
                 pass
 
     X = np.array(X_features)
     y = np.array(y_labels)
 
-    return X, y
+    return X, y, sequence_ids
+
 
 # TRAIN CLASSIFIER
 def train_svm_classifier():
@@ -190,7 +201,8 @@ def train_svm_classifier():
         return
 
     # PREPARE DATA
-    X, y = prepare_data(parsed_data_dict)
+    # We only need X and y for training, so we discard sequence_ids:
+    X, y, _ = prepare_data(parsed_data_dict)
 
     if X.shape[0] == 0:
         print("No valid data found for training.")
@@ -203,8 +215,6 @@ def train_svm_classifier():
     print(f"\nTotal training samples after split: {len(X_train)}")
 
     # SCALE FEATURES (NORMALIZE)
-    # Mean is Zero
-    # standard deviation is 1
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
 
@@ -228,14 +238,14 @@ def train_svm_classifier():
     scatter = ax.scatter(
         X_3d[:, 0], X_3d[:, 1], X_3d[:, 2],
         c=y_numeric,
-        cmap='viridis', # 'viridis' is a perceptually uniform colormap
+        cmap='viridis',  # 'viridis' is a perceptually uniform colormap
         marker='o'
     )
 
     # Add labels and title
-    ax.set_xlabel(f'PCA Component 1 ({pca.explained_variance_ratio_[0]*100:.2f}%)')
-    ax.set_ylabel(f'PCA Component 2 ({pca.explained_variance_ratio_[1]*100:.2f}%)')
-    ax.set_zlabel(f'PCA Component 3 ({pca.explained_variance_ratio_[2]*100:.2f}%)')
+    ax.set_xlabel(f'PCA Component 1 ({pca.explained_variance_ratio_[0] * 100:.2f}%)')
+    ax.set_ylabel(f'PCA Component 2 ({pca.explained_variance_ratio_[1] * 100:.2f}%)')
+    ax.set_zlabel(f'PCA Component 3 ({pca.explained_variance_ratio_[2] * 100:.2f}%)')
     ax.set_title('3D Visualization of Scaled Features (PCA Reduced)')
 
     # Create a legend with class names
@@ -251,8 +261,7 @@ def train_svm_classifier():
     plt.savefig('pca_3d_visualization.png')
     print(f"3D PCA visualization saved as 'pca_3d_visualization.png' in the current directory.")
 
-   ############## PCA FOR GRAPHER END
-
+    ############## PCA FOR GRAPHER END
 
     # TRAIN FINAL SVM MODEL
     print("\nInitializing SVM Classifier with fixed parameters (C=1.0, gamma='scale', kernel='rbf')...")
@@ -272,9 +281,10 @@ def train_svm_classifier():
         print(f"ERROR: Could not save classifier/scaler: {e}")
         return
 
-# LOAD MODEL AND SCALER
+
+# LOAD MODEL AND SCALER - ORIGINAL FUNCTION (EXPECTS LABELS)
 def evaluate_test_data():
-    print("\n--- STARTING EVALUATION ON SEPARATE TEST FILE ---")
+    print("\n--- STARTING EVALUATION ON SEPARATE TEST FILE (Requires True Labels) ---")
 
     # LOAD MODEL AND SCALER
     if not os.path.exists(MODEL_FILE) or not os.path.exists(SCALER_FILE):
@@ -295,7 +305,7 @@ def evaluate_test_data():
     try:
         data_test = np.load(TEST_DATA_PATH, allow_pickle=True)
         parsed_test_dict = dict(data_test)
-        print(f"Test data loaded with classes: {list(parsed_test_dict.keys())}")
+        print(f"Test data loaded with keys (assumed labels): {list(parsed_test_dict.keys())}")
     except FileNotFoundError:
         print(f"ERROR: Test data file not found at {TEST_DATA_PATH}.")
         return
@@ -303,12 +313,18 @@ def evaluate_test_data():
         print(f"An error occurred during test data loading: {e}")
         return
 
-    # PREPARE TEST DATA (Feature Extraction)
-    X_test, y_test = prepare_data(parsed_test_dict)
+    # PREPARE TEST DATA (Feature Extraction) - y_test will be the numeric keys if not properly labeled
+    # We ignore the IDs here, as the primary goal is the classification report
+    X_test, y_test, _ = prepare_data(parsed_test_dict)
 
     if X_test.shape[0] == 0:
         print("No valid data found in the test file.")
         return
+
+    # NOTE ON ERROR: This function will only work correctly if the keys in the NPZ
+    # file match the true class labels (e.g., 'circle', 'vertical'). If they are
+    # file IDs ('1', '10'), the classification report will be meaningless,
+    # as you saw in the output.
 
     # SCALE TEST FEATURES
     X_test_scaled = scaler.transform(X_test)
@@ -322,6 +338,74 @@ def evaluate_test_data():
     print(classification_report(y_test, y_pred))
 
 
+# NEW FUNCTION: PREDICTS UNLABELED DATA (USING NUMERIC KEYS)
+def predict_unlabeled_test_data():
+    print("\n--- STARTING PREDICTION OF UNLABELED TEST DATA (Using File IDs) ---")
+
+    # LOAD MODEL AND SCALER
+    if not os.path.exists(MODEL_FILE) or not os.path.exists(SCALER_FILE):
+        print(f"ERROR: Required classifier files ('{MODEL_FILE}' and '{SCALER_FILE}') not found. Run training first.")
+        return
+
+    try:
+        with open(MODEL_FILE, 'rb') as f:
+            svm_model = pickle.load(f)
+        with open(SCALER_FILE, 'rb') as f:
+            scaler = pickle.load(f)
+        print("Trained classifier and scaler loaded.")
+    except Exception as e:
+        print(f"ERROR loading classifier/scaler: {e}")
+        return
+
+    # LOAD TEST DATA
+    try:
+        data_test = np.load(TEST_DATA_PATH, allow_pickle=True)
+        parsed_test_dict = dict(data_test)
+        print(f"Test file IDs loaded: {list(parsed_test_dict.keys())}")
+    except FileNotFoundError:
+        print(f"ERROR: Test data file not found at {TEST_DATA_PATH}.")
+        return
+    except Exception as e:
+        print(f"An error occurred during test data loading: {e}")
+        return
+
+    # PREPARE TEST DATA (Feature Extraction)
+    # The 'y' array here will just contain the file IDs, which we ignore for prediction,
+    # but we need the IDs list to map predictions back to the original files.
+    X_test, _, file_ids = prepare_data(parsed_test_dict)
+
+    if X_test.shape[0] == 0:
+        print("No valid data found in the test file for prediction.")
+        return
+
+    # SCALE TEST FEATURES
+    X_test_scaled = scaler.transform(X_test)
+
+    # PREDICT
+    y_pred = svm_model.predict(X_test_scaled)
+
+    # OUTPUT RESULTS
+    print("\n" + "=" * 60)
+    print("PREDICTION RESULTS FOR EACH TEST FILE/SEQUENCE")
+    print("=" * 60)
+
+    # Print header
+    print(f"{'File ID / Sequence ID':<30} | {'Predicted Class':<20}")
+    print("-" * 52)
+
+    # Loop through results and print the prediction mapped to the original file ID
+    for seq_id, pred in zip(file_ids, y_pred):
+        # We simplify the file ID here, replacing '_seq_0' with just the ID if it's the first sequence
+        display_id = seq_id.replace('_seq_0', '')
+        print(f"{display_id:<30} | {pred:<20}")
+
+    print("\nPrediction complete.")
+
+
 if __name__ == '__main__':
     train_svm_classifier()
-    evaluate_test_data()
+    # The original evaluation function will fail if test data is not properly labeled by class.
+    # evaluate_test_data()
+
+    # Use the new function to predict the unlabeled test data
+    predict_unlabeled_test_data()

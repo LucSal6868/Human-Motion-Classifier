@@ -14,7 +14,7 @@ class PATHS(Enum):
 
     # FILES
     PARSED_TRAIN_DATA = "data/train/parsed.npz"
-    PARSED_TEST_DATA = "data/test/parsed.npz"
+    PARSED_TEST_DATA = "data/test/parsed_test_data.npz"
     AUGMENTED_TRAIN_DATA = "data/train/augmented.npz"
     AUGMENTED_TEST_DATA = "data/test/augmented.npz"
 
